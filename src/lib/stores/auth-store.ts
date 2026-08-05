@@ -4,6 +4,22 @@ import { apiFetch } from "@/lib/api";
 import { useOrgStore } from "@/lib/stores/org-store";
 import type { User } from "@/lib/types";
 
+// SWR's cache is a single global store keyed only by URL, with no notion of
+// "whose session this data belongs to" — every useApi(...) call in the app
+// shares it. Without this, switching accounts in the same tab (logout then
+// login as someone else, or straight into a different login) could flash or
+// stick on the *previous* user's data for any endpoint — /ai/history being
+// the one this got reported for, but the bug is general to every cached GET.
+//
+// Imported lazily, not at module scope: this file is reachable from
+// api-server.ts's Server Component graph (via api.ts, for its API_URL
+// constant), and swr's RSC build has no `mutate` export — a static import
+// breaks the server bundle. This action only ever runs client-side anyway.
+function clearAllApiCache() {
+  if (typeof window === "undefined") return;
+  import("swr").then(({ mutate }) => mutate(() => true, undefined, { revalidate: false }));
+}
+
 interface TokenPair {
   access_token: string;
   refresh_token: string;
@@ -50,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
       clearSession: () => {
         set({ user: null, accessToken: null, refreshToken: null });
         useOrgStore.getState().reset();
+        clearAllApiCache();
       },
 
       fetchMe: async () => {
@@ -59,6 +76,7 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email, password) => {
         useOrgStore.getState().reset();
+        clearAllApiCache();
         const tokens = await apiFetch<TokenPair>("/auth/login", {
           method: "POST",
           body: { email, password },

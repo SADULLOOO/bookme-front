@@ -16,45 +16,43 @@ type LocalMessage = AiMessage & { _status?: "pending" | "failed" };
 export default function AiAssistantPage() {
   const t = useT();
   const user = useAuthStore((s) => s.user);
-  const { data: history } = useApi<AiMessage[]>("/ai/history");
+  const { data: history, mutate: mutateHistory } = useApi<AiMessage[]>("/ai/history");
 
-  const [messages, setMessages] = useState<LocalMessage[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [body, setBody] = useState("");
+  // `history` (server truth, via SWR) is the only source of record — no
+  // parallel local copy that a stale mount/remount can leave frozen or
+  // pointed at a previous session's data. The one thing kept in local state
+  // is the not-yet-confirmed user bubble, cleared the moment a fresh
+  // `history` fetch actually contains it.
+  const [pendingUser, setPendingUser] = useState<LocalMessage | null>(null);
   const [sending, setSending] = useState(false);
+  const [body, setBody] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (history && !loaded) {
-      setMessages(history);
-      setLoaded(true);
-    }
-  }, [history, loaded]);
+  const messages: LocalMessage[] = pendingUser ? [...(history ?? []), pendingUser] : (history ?? []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages.length, sending]);
 
   async function send(text: string) {
-    const tempId = `temp-${crypto.randomUUID()}`;
-    const optimistic: LocalMessage = {
-      id: tempId,
+    setPendingUser({
+      id: `temp-${crypto.randomUUID()}`,
       role: "user",
       content: text,
       created_at: new Date().toISOString(),
       _status: "pending",
-    };
-    setMessages((prev) => [...prev, optimistic]);
+    });
     setSending(true);
     try {
-      const res = await apiFetch<{ reply: AiMessage }>("/ai/chat", { method: "POST", body: { message: text } });
-      setMessages((prev) => [
-        ...prev.map((m) => (m.id === tempId ? { ...m, _status: undefined } : m)),
-        res.reply,
-      ]);
+      await apiFetch("/ai/chat", { method: "POST", body: { message: text } });
+      // The backend already persisted both the user message and the reply —
+      // refetch so `history` becomes the single source of truth again,
+      // rather than hand-splicing a locally-held reply into local state.
+      await mutateHistory();
+      setPendingUser(null);
     } catch (err) {
-      setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, _status: "failed" as const } : m)));
+      setPendingUser((prev) => (prev ? { ...prev, _status: "failed" } : prev));
       toast.error(err instanceof ApiError ? String(err.detail) : t("ai.sendFailed"));
     } finally {
       setSending(false);
@@ -80,7 +78,7 @@ export default function AiAssistantPage() {
   }
 
   async function retryFailed(msg: LocalMessage) {
-    setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+    setPendingUser(null);
     await send(msg.content);
   }
 
