@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AlertCircle, Send, Sparkles } from "lucide-react";
 import { AiMessageContent } from "@/components/ai-message-content";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { useOrgStore } from "@/lib/stores/org-store";
 import { useApi } from "@/lib/use-api";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useT } from "@/lib/i18n/use-t";
@@ -46,6 +47,10 @@ export default function AiAssistantPage() {
     setSending(true);
     try {
       await apiFetch("/ai/chat", { method: "POST", body: { message: text } });
+      // A booking (or any other action that grants a new business
+      // membership) needs the org list refreshed too, not just history —
+      // otherwise "My Bookings" won't show it until the next poll or reload.
+      useOrgStore.getState().loadOrganizations().catch(() => {});
       // The backend already persisted both the user message and the reply —
       // refetch so `history` becomes the single source of truth again,
       // rather than hand-splicing a locally-held reply into local state.
