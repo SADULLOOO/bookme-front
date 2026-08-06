@@ -153,6 +153,16 @@ function PlatformAdminPageInner() {
     }
   }
 
+  async function handlePermanentlyDelete(user: PlatformUser) {
+    try {
+      await apiFetch(`/platform/users/${user.id}/permanent`, { method: "DELETE" });
+      toast.success(t("platform.permanentlyDeleted", { name: user.full_name }));
+      refreshTrash();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? String(err.detail) : t("platform.permanentDeleteFailed"));
+    }
+  }
+
   return (
     <div>
       <div className="mb-6">
@@ -335,6 +345,23 @@ function PlatformAdminPageInner() {
                 >
                   <Undo2 className="size-3.5" /> {t("platform.restore")}
                 </button>
+                <AlertDialog>
+                  <AlertDialogTrigger className="flex size-8 shrink-0 items-center justify-center rounded-lg text-destructive transition-colors hover:bg-destructive/10">
+                    <Trash2 className="size-3.5" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t("platform.permanentDeleteTitle", { name: u.full_name })}</AlertDialogTitle>
+                      <AlertDialogDescription>{t("platform.permanentDeleteBody")}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handlePermanentlyDelete(u)}>
+                        {t("platform.permanentDeleteConfirm")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ))}
             {trashed && trashed.length === 0 && (

@@ -95,7 +95,17 @@ function ChatPageInner() {
 
   useEffect(() => {
     if (!currentId) return;
-    apiFetch(`/chat/conversations/${currentId}/read`, { method: "POST" }).catch(() => {});
+    // Zero the badge immediately — waiting on the network round-trip (or,
+    // worse, on some unrelated revalidation to eventually catch up) is what
+    // left the unread dot visibly stuck after a conversation was already read.
+    refreshList(
+      (prev) => prev?.map((c) => (c.id === currentId ? { ...c, unread_count: 0 } : c)),
+      { revalidate: false },
+    );
+    apiFetch(`/chat/conversations/${currentId}/read`, { method: "POST" })
+      .then(() => refreshList())
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
 
   useEffect(() => {
