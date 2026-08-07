@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, Send, Sparkles } from "lucide-react";
+import { AlertCircle, Loader2, Mic, Send, Square, Sparkles } from "lucide-react";
 import { AiMessageContent } from "@/components/ai-message-content";
+import { AiProviderSwitch } from "@/components/ai-provider-switch";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useOrgStore } from "@/lib/stores/org-store";
 import { useApi } from "@/lib/use-api";
+import { useVoiceRecorder } from "@/lib/use-voice-recorder";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useT } from "@/lib/i18n/use-t";
 import { cn } from "@/lib/utils";
@@ -35,6 +37,13 @@ export default function AiAssistantPage() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages.length, sending]);
+
+  // Voice input — recorded, transcribed to real text server-side, then sent
+  // exactly like a typed message. Never held onto or sent as an audio clip.
+  const voice = useVoiceRecorder(
+    (text) => send(text),
+    () => toast.error(t("ai.voiceFailed")),
+  );
 
   async function send(text: string) {
     setPendingUser({
@@ -93,10 +102,11 @@ export default function AiAssistantPage() {
         <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
           <Sparkles className="size-4.5" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="font-display text-lg font-bold text-ink">{t("ai.title")}</h1>
           <p className="text-[12.5px] text-sub">{t("ai.subtitle")}</p>
         </div>
+        {user?.is_platform_admin && <AiProviderSwitch />}
       </div>
 
       <div className="glass flex flex-1 flex-col overflow-hidden">
@@ -156,13 +166,39 @@ export default function AiAssistantPage() {
             value={body}
             onChange={(e) => setBody(e.target.value)}
             onKeyDown={handleInputKeyDown}
-            placeholder={t("ai.messagePlaceholder")}
-            disabled={sending}
+            placeholder={
+              voice.state === "recording"
+                ? t("ai.voiceListening")
+                : voice.state === "transcribing"
+                  ? t("ai.voiceTranscribing")
+                  : t("ai.messagePlaceholder")
+            }
+            disabled={sending || voice.state !== "idle"}
             className="flex-1 rounded-full border border-glass-border bg-glass-fill px-4 py-2.5 text-[13.5px] text-ink outline-none focus:border-brand focus:bg-glass-fill-strong disabled:opacity-60"
           />
           <button
+            type="button"
+            onClick={voice.toggle}
+            disabled={sending || voice.state === "transcribing"}
+            title={voice.state === "recording" ? t("ai.voiceStop") : t("ai.voiceStart")}
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-full border transition-colors disabled:opacity-50",
+              voice.state === "recording"
+                ? "animate-pulse border-transparent bg-destructive text-white"
+                : "border-glass-border bg-glass-fill text-sub hover:text-ink",
+            )}
+          >
+            {voice.state === "transcribing" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : voice.state === "recording" ? (
+              <Square className="size-3.5 fill-current" />
+            ) : (
+              <Mic className="size-4" />
+            )}
+          </button>
+          <button
             type="submit"
-            disabled={!body.trim() || sending}
+            disabled={!body.trim() || sending || voice.state !== "idle"}
             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink transition-transform hover:scale-105 disabled:opacity-50"
           >
             <Send className="size-4" />

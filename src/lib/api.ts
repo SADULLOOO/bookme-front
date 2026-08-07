@@ -110,3 +110,28 @@ export async function uploadCvFile(file: File): Promise<{ url: string }> {
   }
   return res.json();
 }
+
+/** Voice input for the AI assistant — multipart, so (like uploadCvFile)
+ * it bypasses apiFetch's JSON-only body handling. Authenticated, unlike
+ * uploadCvFile, since this runs from inside the logged-in app. */
+export async function transcribeAudio(blob: Blob): Promise<{ text: string }> {
+  const form = new FormData();
+  form.append("file", blob, "voice.webm");
+  const token = useAuthStore.getState().accessToken;
+  const res = await fetch(`${API_URL}/ai/transcribe`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: form,
+  });
+  if (!res.ok) {
+    let detail: unknown;
+    try {
+      detail = await res.json();
+    } catch {
+      detail = await res.text();
+    }
+    const message = detail && typeof detail === "object" && "detail" in detail ? (detail as { detail: unknown }).detail : detail;
+    throw new ApiError(res.status, message);
+  }
+  return res.json();
+}

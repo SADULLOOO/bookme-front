@@ -310,6 +310,8 @@ export interface AiMessage {
   created_at: string;
 }
 
+export type AiProvider = "groq" | "deepseek";
+
 export interface ChatMessageListOut {
   conversation: ChatConversation;
   messages: ChatMessage[];
