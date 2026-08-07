@@ -114,9 +114,13 @@ export async function uploadCvFile(file: File): Promise<{ url: string }> {
 /** Voice input for the AI assistant — multipart, so (like uploadCvFile)
  * it bypasses apiFetch's JSON-only body handling. Authenticated, unlike
  * uploadCvFile, since this runs from inside the logged-in app. */
-export async function transcribeAudio(blob: Blob): Promise<{ text: string }> {
+export async function transcribeAudio(blob: Blob, language?: string): Promise<{ text: string }> {
   const form = new FormData();
   form.append("file", blob, "voice.webm");
+  // Without a language hint, Whisper auto-detects from audio alone — a
+  // short or noisy clip can get misidentified as some other language
+  // entirely, producing fluent-looking gibberish instead of an error.
+  if (language) form.append("language", language);
   const token = useAuthStore.getState().accessToken;
   const res = await fetch(`${API_URL}/ai/transcribe`, {
     method: "POST",

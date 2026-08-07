@@ -6,6 +6,7 @@ import { AlertCircle, Loader2, Mic, Send, Square, Sparkles } from "lucide-react"
 import { AiMessageContent } from "@/components/ai-message-content";
 import { AiProviderSwitch } from "@/components/ai-provider-switch";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { useLocaleStore } from "@/lib/stores/locale-store";
 import { useOrgStore } from "@/lib/stores/org-store";
 import { useApi } from "@/lib/use-api";
 import { useVoiceRecorder } from "@/lib/use-voice-recorder";
@@ -19,6 +20,7 @@ type LocalMessage = AiMessage & { _status?: "pending" | "failed" };
 export default function AiAssistantPage() {
   const t = useT();
   const user = useAuthStore((s) => s.user);
+  const locale = useLocaleStore((s) => s.locale);
   const { data: history, mutate: mutateHistory } = useApi<AiMessage[]>("/ai/history");
 
   // `history` (server truth, via SWR) is the only source of record — no
@@ -43,6 +45,7 @@ export default function AiAssistantPage() {
   const voice = useVoiceRecorder(
     (text) => send(text),
     () => toast.error(t("ai.voiceFailed")),
+    locale,
   );
 
   async function send(text: string) {

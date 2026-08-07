@@ -8,7 +8,11 @@ export type VoiceRecorderState = "idle" | "recording" | "transcribing";
 /** Records a voice message and transcribes it to real text via the backend
  * (Groq Whisper) — never sent or stored as an audio clip, only as the
  * words it heard, same as any other typed message. */
-export function useVoiceRecorder(onTranscribed: (text: string) => void, onError: (err: unknown) => void) {
+export function useVoiceRecorder(
+  onTranscribed: (text: string) => void,
+  onError: (err: unknown) => void,
+  language?: string,
+) {
   const [state, setState] = useState<VoiceRecorderState>("idle");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -29,7 +33,7 @@ export function useVoiceRecorder(onTranscribed: (text: string) => void, onError:
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
         setState("transcribing");
         try {
-          const { text } = await transcribeAudio(blob);
+          const { text } = await transcribeAudio(blob, language);
           if (text.trim()) onTranscribed(text.trim());
         } catch (err) {
           onError(err);
