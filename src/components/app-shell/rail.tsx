@@ -47,7 +47,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/app/home", labelKey: "nav.home", icon: Home, roles: ["client", "staff", "admin", "owner"] },
   { href: "/app/ai", labelKey: "nav.ai", icon: Sparkles, roles: ["client", "staff", "admin", "owner"] },
   { href: "/app/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard, roles: ["staff", "admin", "owner"] },
-  { href: "/app/bookings", labelKey: "nav.myBookings", icon: CalendarDays, roles: ["client"] },
+  // Every role can personally book somewhere — including at their own
+  // business — so this isn't client-exclusive the way it used to be.
+  { href: "/app/bookings", labelKey: "nav.myBookings", icon: CalendarDays, roles: ["client", "staff", "admin", "owner"] },
   { href: "/app/chat", labelKey: "nav.chat", icon: MessageCircle, roles: ["client", "staff", "admin", "owner"] },
   { href: "/app/members", labelKey: "nav.members", icon: Users, roles: ["admin", "owner"] },
   { href: "/app/services", labelKey: "nav.services", icon: Scissors, roles: ["admin", "owner"] },

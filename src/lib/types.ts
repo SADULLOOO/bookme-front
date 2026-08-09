@@ -255,6 +255,11 @@ export interface Booking {
   created_at: string;
 }
 
+export interface MyBooking extends Booking {
+  organization_name: string;
+  organization_slug: string;
+}
+
 export interface AnalyticsOverview {
   from_date: string;
   to_date: string;

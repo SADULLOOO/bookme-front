@@ -96,7 +96,9 @@ function PlatformAdminPageInner() {
   const { data: trashed, mutate: refreshTrash } = useApi<PlatformUser[]>(
     currentUser?.is_platform_admin ? "/platform/users/trash" : null,
   );
-  const { data: stats } = useApi<PlatformStats>(currentUser?.is_platform_admin ? "/platform/stats" : null);
+  const { data: stats, mutate: refreshStats } = useApi<PlatformStats>(
+    currentUser?.is_platform_admin ? "/platform/stats" : null,
+  );
   const { data: allUsersForRecent } = useApi<PlatformUser[]>(currentUser?.is_platform_admin ? "/platform/users" : null);
   const { data: businessApplications, mutate: refreshApplications } = useApi<BusinessApplication[]>(
     currentUser?.is_platform_admin ? "/platform/applications/business" : null,
@@ -137,6 +139,7 @@ function PlatformAdminPageInner() {
       toast.success(t("platform.movedToTrash", { name: user.full_name }));
       refreshUsers();
       refreshTrash();
+      refreshStats();
     } catch (err) {
       toast.error(err instanceof ApiError ? String(err.detail) : t("platform.removeUserFailed"));
     }
@@ -148,6 +151,7 @@ function PlatformAdminPageInner() {
       toast.success(t("platform.restored", { name: user.full_name }));
       refreshUsers();
       refreshTrash();
+      refreshStats();
     } catch (err) {
       toast.error(err instanceof ApiError ? String(err.detail) : t("platform.restoreFailed"));
     }
@@ -158,6 +162,7 @@ function PlatformAdminPageInner() {
       await apiFetch(`/platform/users/${user.id}/permanent`, { method: "DELETE" });
       toast.success(t("platform.permanentlyDeleted", { name: user.full_name }));
       refreshTrash();
+      refreshStats();
     } catch (err) {
       toast.error(err instanceof ApiError ? String(err.detail) : t("platform.permanentDeleteFailed"));
     }
