@@ -13,7 +13,7 @@ import { useLocaleStore, LOCALE_INTL_TAG } from "@/lib/stores/locale-store";
 import { useT } from "@/lib/i18n/use-t";
 import { nextDays, dateKey } from "@/lib/booking-dates";
 import { cn } from "@/lib/utils";
-import type { Booking, PublicStaff } from "@/lib/types";
+import type { Booking, PublicStaff, WaitlistEntry } from "@/lib/types";
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -46,6 +46,7 @@ export function SpecialistCard({
   const [date, setDate] = useState<Date>(days[0]);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [joiningWaitlist, setJoiningWaitlist] = useState(false);
 
   const service = staff.services.find((s) => s.id === serviceId) ?? staff.services[0] ?? null;
 
@@ -62,6 +63,50 @@ export function SpecialistCard({
       ? String(availabilityError.detail)
       : t("specialist.availabilityError")
     : null;
+
+  const noSlotsThisDay = !slotsLoading && !slotsError && slots && slots.length === 0;
+  const { data: myWaitlist, mutate: refreshWaitlist } = useApi<WaitlistEntry[]>(
+    noSlotsThisDay ? `/organizations/${organizationId}/waitlist` : null,
+  );
+  const waitlistEntry =
+    myWaitlist?.find(
+      (w) =>
+        w.service_id === service?.id &&
+        w.date === dateKey(date) &&
+        (w.staff_id === null || w.staff_id === staff.id) &&
+        (w.status === "waiting" || w.status === "notified"),
+    ) ?? null;
+
+  async function handleJoinWaitlist() {
+    if (!service) return;
+    setJoiningWaitlist(true);
+    try {
+      await apiFetch(`/organizations/${organizationId}/waitlist`, {
+        method: "POST",
+        body: { branch_id: branchId, service_id: service.id, staff_id: staff.id, date: dateKey(date) },
+      });
+      toast.success(t("waitlist.joined"));
+      refreshWaitlist();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? String(err.detail) : t("waitlist.joinFailed"));
+    } finally {
+      setJoiningWaitlist(false);
+    }
+  }
+
+  async function handleLeaveWaitlist() {
+    if (!waitlistEntry) return;
+    setJoiningWaitlist(true);
+    try {
+      await apiFetch(`/organizations/${organizationId}/waitlist/${waitlistEntry.id}`, { method: "DELETE" });
+      toast.success(t("waitlist.left"));
+      refreshWaitlist();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? String(err.detail) : t("waitlist.leaveFailed"));
+    } finally {
+      setJoiningWaitlist(false);
+    }
+  }
 
   async function handleBook(slot: string) {
     if (!service) return;
@@ -191,8 +236,34 @@ export function SpecialistCard({
 
               {slotsLoading && <p className="text-sm text-sub">{t("specialist.loadingAvailability")}</p>}
               {slotsError && <p className="text-sm text-destructive">{slotsError}</p>}
-              {!slotsLoading && !slotsError && slots && slots.length === 0 && (
-                <p className="text-sm text-sub">{t("specialist.noSlotsThisDay")}</p>
+              {noSlotsThisDay && (
+                <div className="flex flex-col items-start gap-2">
+                  <p className="text-sm text-sub">{t("specialist.noSlotsThisDay")}</p>
+                  {waitlistEntry ? (
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-avail-3/15 px-3 py-1.5 text-[12px] font-semibold text-avail-3">
+                        {t("waitlist.youAreOnList")}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={joiningWaitlist}
+                        onClick={handleLeaveWaitlist}
+                        className="rounded-full border border-glass-border bg-glass-fill px-3 py-1.5 text-[12px] font-semibold text-sub transition-colors hover:text-ink disabled:opacity-50"
+                      >
+                        {joiningWaitlist ? "…" : t("waitlist.leaveButton")}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={joiningWaitlist}
+                      onClick={handleJoinWaitlist}
+                      className="rounded-full border border-glass-border bg-glass-fill px-3.5 py-1.5 text-[12px] font-semibold text-ink transition-colors hover:border-brand hover:bg-brand/10 disabled:opacity-50"
+                    >
+                      {joiningWaitlist ? "…" : t("waitlist.joinButton")}
+                    </button>
+                  )}
+                </div>
               )}
               {!slotsLoading && slots && slots.length > 0 && (
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">

@@ -23,18 +23,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useT } from "@/lib/i18n/use-t";
-import type { Branch, Service } from "@/lib/types";
+import type { Branch, Service, ServiceCategory } from "@/lib/types";
+
+const NO_CATEGORY = "__none__";
 
 export function ServiceFormDialog({
   trigger,
   organizationId,
   branches,
+  categories,
   service,
   onSaved,
 }: {
   trigger: React.ReactNode;
   organizationId: string;
   branches: Branch[];
+  categories: ServiceCategory[];
   service?: Service;
   onSaved: () => void;
 }) {
@@ -44,6 +48,7 @@ export function ServiceFormDialog({
   const [name, setName] = useState(service?.name ?? "");
   const [description, setDescription] = useState(service?.description ?? "");
   const [branchId, setBranchId] = useState(service?.branch_id ?? "");
+  const [categoryId, setCategoryId] = useState(service?.category_id ?? NO_CATEGORY);
   const [duration, setDuration] = useState(service ? String(service.duration_minutes) : "30");
   const [price, setPrice] = useState(service ? String(service.price) : "");
   const [currency, setCurrency] = useState(service?.currency ?? "USD");
@@ -61,6 +66,7 @@ export function ServiceFormDialog({
     setName(service?.name ?? "");
     setDescription(service?.description ?? "");
     setBranchId(service?.branch_id ?? "");
+    setCategoryId(service?.category_id ?? NO_CATEGORY);
     setDuration(service ? String(service.duration_minutes) : "30");
     setPrice(service ? String(service.price) : "");
     setCurrency(service?.currency ?? "USD");
@@ -93,6 +99,7 @@ export function ServiceFormDialog({
       name: name.trim(),
       description: description.trim() || null,
       branch_id: branchId,
+      category_id: categoryId === NO_CATEGORY ? null : categoryId,
       duration_minutes: durationNum,
       price: priceNum,
       currency: currency.trim().toUpperCase() || "USD",
@@ -163,6 +170,28 @@ export function ServiceFormDialog({
                 {branches.map((b) => (
                   <SelectItem key={b.id} value={b.id}>
                     {b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="svcCategory">{t("services.categoryLabel")}</Label>
+            <Select value={categoryId} onValueChange={(v) => setCategoryId(v as string)}>
+              <SelectTrigger id="svcCategory" className="w-full border-glass-border bg-glass-fill">
+                <SelectValue placeholder={t("services.categoryPlaceholder")}>
+                  {(value: string | null) =>
+                    value === NO_CATEGORY || !value
+                      ? t("services.categoryNone")
+                      : categories.find((c) => c.id === value)?.name ?? value
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_CATEGORY}>{t("services.categoryNone")}</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>

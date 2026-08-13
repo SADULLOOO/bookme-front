@@ -216,6 +216,28 @@ export interface Service {
   created_at: string;
 }
 
+export interface ServiceCategory {
+  id: string;
+  organization_id: string;
+  name: string;
+  created_at: string;
+}
+
+export type WaitlistStatus = "waiting" | "notified" | "converted" | "cancelled";
+
+export interface WaitlistEntry {
+  id: string;
+  organization_id: string;
+  branch_id: string;
+  service_id: string;
+  staff_id: string | null;
+  client_id: string;
+  date: string;
+  status: WaitlistStatus;
+  notified_at: string | null;
+  created_at: string;
+}
+
 export interface StaffServiceLink {
   staff_id: string;
   service_id: string;

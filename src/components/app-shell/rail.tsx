@@ -8,7 +8,9 @@ import {
   Clock,
   Home,
   LayoutDashboard,
+  ListPlus,
   LogOut,
+  MapPin,
   MessageCircle,
   Scissors,
   ShieldCheck,
@@ -53,6 +55,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/app/chat", labelKey: "nav.chat", icon: MessageCircle, roles: ["client", "staff", "admin", "owner"] },
   { href: "/app/members", labelKey: "nav.members", icon: Users, roles: ["admin", "owner"] },
   { href: "/app/services", labelKey: "nav.services", icon: Scissors, roles: ["admin", "owner"] },
+  { href: "/app/branches", labelKey: "nav.branches", icon: MapPin, roles: ["admin", "owner"] },
+  { href: "/app/waitlist", labelKey: "nav.waitlist", icon: ListPlus, roles: ["admin", "owner"] },
   { href: "/app/schedule", labelKey: "nav.schedule", icon: Clock, roles: ["staff", "admin", "owner"] },
   { href: "/app/profile", labelKey: "nav.profile", icon: UserRound, roles: ["client"] },
 ];

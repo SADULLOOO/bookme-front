@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
-import { Pencil, Plus, Scissors } from "lucide-react";
+import { Pencil, Plus, Scissors, Tags } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,12 +17,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { UserAvatar } from "@/components/user-avatar";
 import { ServiceFormDialog } from "@/components/service-form-dialog";
+import { ServiceCategoriesDialog } from "@/components/service-categories-dialog";
 import { useActiveOrg } from "@/lib/stores/org-store";
 import { useApi } from "@/lib/use-api";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useT } from "@/lib/i18n/use-t";
 import { cn } from "@/lib/utils";
-import type { Branch, Service, StaffMember, StaffServiceLink } from "@/lib/types";
+import type { Branch, Service, ServiceCategory, StaffMember, StaffServiceLink } from "@/lib/types";
 
 export default function ServicesPage() {
   const t = useT();
@@ -33,6 +34,9 @@ export default function ServicesPage() {
   const { data: branches } = useApi<Branch[]>(orgId ? `/organizations/${orgId}/branches` : null);
   const { data: services, mutate: refreshServices } = useApi<Service[]>(orgId ? `/organizations/${orgId}/services` : null);
   const { data: staffList } = useApi<StaffMember[]>(orgId ? `/organizations/${orgId}/staff` : null);
+  const { data: categories, mutate: refreshCategories } = useApi<ServiceCategory[]>(
+    orgId ? `/organizations/${orgId}/service-categories` : null,
+  );
 
   const staffIdsKey = useMemo(() => (staffList ?? []).map((s) => s.id).sort().join(","), [staffList]);
   const {
@@ -57,6 +61,7 @@ export default function ServicesPage() {
   }
 
   const branchName = (id: string | null) => branches?.find((b) => b.id === id)?.name ?? "—";
+  const categoryName = (id: string | null) => (id ? categories?.find((c) => c.id === id)?.name ?? null : null);
 
   async function handleDeactivate(service: Service) {
     if (!orgId) return;
@@ -94,17 +99,31 @@ export default function ServicesPage() {
           <p className="text-[13px] text-sub">{t("services.subtitle", { org: activeOrg.name })}</p>
         </div>
         {orgId && (
-          <ServiceFormDialog
-            organizationId={orgId}
-            branches={branches ?? []}
-            onSaved={() => refreshServices()}
-            trigger={
-              <span className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-brand px-4 py-2.5 text-[13px] font-bold text-brand-ink transition-transform hover:scale-[1.03]">
-                <Plus className="size-3.5" />
-                {t("services.addService")}
-              </span>
-            }
-          />
+          <div className="flex shrink-0 items-center gap-2">
+            <ServiceCategoriesDialog
+              organizationId={orgId}
+              categories={categories ?? []}
+              onChanged={() => refreshCategories()}
+              trigger={
+                <span className="flex cursor-pointer items-center gap-1.5 rounded-full border border-glass-border bg-glass-fill px-4 py-2.5 text-[13px] font-semibold text-ink transition-colors hover:bg-glass-fill-strong">
+                  <Tags className="size-3.5" />
+                  {t("serviceCategories.manageButton")}
+                </span>
+              }
+            />
+            <ServiceFormDialog
+              organizationId={orgId}
+              branches={branches ?? []}
+              categories={categories ?? []}
+              onSaved={() => refreshServices()}
+              trigger={
+                <span className="flex cursor-pointer items-center gap-1.5 rounded-full bg-brand px-4 py-2.5 text-[13px] font-bold text-brand-ink transition-transform hover:scale-[1.03]">
+                  <Plus className="size-3.5" />
+                  {t("services.addService")}
+                </span>
+              }
+            />
+          </div>
         )}
       </div>
 
@@ -120,7 +139,14 @@ export default function ServicesPage() {
           <div key={service.id} className="glass flex flex-col gap-3 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="text-[14.5px] font-bold text-ink">{service.name}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-[14.5px] font-bold text-ink">{service.name}</div>
+                  {categoryName(service.category_id) && (
+                    <span className="rounded-full bg-glass-fill-strong px-2 py-0.5 text-[10.5px] font-semibold text-sub">
+                      {categoryName(service.category_id)}
+                    </span>
+                  )}
+                </div>
                 <div className="mt-0.5 text-[12px] text-sub-2">
                   {branchName(service.branch_id)} · {service.duration_minutes} {t("common.min")} · {service.price} {service.currency}
                   {service.deposit_amount != null && ` · ${t("services.depositBadge", { amount: String(service.deposit_amount) })}`}
@@ -132,12 +158,11 @@ export default function ServicesPage() {
                   <ServiceFormDialog
                     organizationId={orgId}
                     branches={branches ?? []}
+                    categories={categories ?? []}
                     service={service}
                     onSaved={() => refreshServices()}
                     trigger={
                       <span
-                        role="button"
-                        tabIndex={0}
                         className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-sub transition-colors hover:bg-glass-fill-strong hover:text-ink"
                         aria-label={t("services.editService")}
                       >
