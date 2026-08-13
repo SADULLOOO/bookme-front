@@ -18,9 +18,42 @@ const manrope = Manrope({
   display: "swap",
 });
 
+const SITE_URL = "https://smartsbooking.online";
+const SITE_TITLE = "SmartsBooking";
+const SITE_DESCRIPTION =
+  "SmartsBooking is an online appointment booking platform for salons, spas, clinics, barbershops, and gyms. Find a business, check real-time availability, and book in seconds.";
+
 export const metadata: Metadata = {
-  title: "BookMe",
-  description: "Book appointments with the businesses you trust, in seconds.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_TITLE} — Book Appointments Online`,
+    template: `%s · ${SITE_TITLE}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_TITLE,
+  keywords: [
+    "appointment booking",
+    "online booking platform",
+    "salon booking",
+    "spa booking",
+    "barbershop booking",
+    "clinic booking",
+    "book a business online",
+  ],
+  robots: { index: true, follow: true },
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: SITE_TITLE,
+    title: `${SITE_TITLE} — Book Appointments Online`,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: `${SITE_TITLE} — Book Appointments Online`,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({
