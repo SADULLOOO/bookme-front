@@ -118,11 +118,13 @@ export function AddStaffDialog({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {(branches ?? []).map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.name}
-                  </SelectItem>
-                ))}
+                {(branches ?? [])
+                  .filter((b) => b.is_active)
+                  .map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>

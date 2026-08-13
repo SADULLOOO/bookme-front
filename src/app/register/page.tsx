@@ -54,9 +54,15 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [resent, setResent] = useState(false);
 
+  // Bounces someone away who lands on /register while already signed in —
+  // but not once they're mid-flow: confirming their own code logs them in
+  // right here, and handleConfirm already owns the post-login redirect
+  // (to /onboarding or /application-status). Without the step guard, this
+  // effect fires the instant that login resolves and races router.push
+  // there, leaving the user stuck looking at the code screen.
   useEffect(() => {
-    if (user) router.replace("/app");
-  }, [user, router]);
+    if (user && step === "intent") router.replace("/app");
+  }, [user, step, router]);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();

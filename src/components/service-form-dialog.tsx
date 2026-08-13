@@ -56,11 +56,13 @@ export function ServiceFormDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const activeBranches = branches.filter((b) => b.is_active);
+
   useEffect(() => {
-    if (open && !isEdit && !branchId && branches.length === 1) {
-      setBranchId(branches[0].id);
+    if (open && !isEdit && !branchId && activeBranches.length === 1) {
+      setBranchId(activeBranches[0].id);
     }
-  }, [open, isEdit, branchId, branches]);
+  }, [open, isEdit, branchId, activeBranches]);
 
   function reset() {
     setName(service?.name ?? "");
@@ -167,7 +169,12 @@ export function ServiceFormDialog({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {branches.map((b) => (
+                {/* Deactivated branches aren't offered for new assignments, but
+                    a service already sitting at one still needs to show it. */}
+                {(branchId && !activeBranches.some((b) => b.id === branchId)
+                  ? [...activeBranches, ...branches.filter((b) => b.id === branchId)]
+                  : activeBranches
+                ).map((b) => (
                   <SelectItem key={b.id} value={b.id}>
                     {b.name}
                   </SelectItem>
