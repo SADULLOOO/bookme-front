@@ -203,6 +203,7 @@ const en: Dict = {
   "landing.heroBody":
     "BookMe gives barbershops, salons, clinics, and studios a booking page, staff scheduling, no-show protection, and real-time client chat — set up in minutes, not weeks.",
   "landing.startFree": "Start for free",
+  "landing.openApp": "Open app",
   "landing.browseBusinesses": "Browse businesses",
   "landing.findBusiness": "Find a business on BookMe",
   "landing.aboutBadge": "About BookMe",
@@ -835,6 +836,7 @@ const ru: Dict = {
   "landing.heroBody":
     "BookMe даёт барбершопам, салонам, клиникам и студиям страницу для записи, расписание сотрудников, защиту от неявок и чат с клиентами в реальном времени — всё настраивается за минуты, а не недели.",
   "landing.startFree": "Начать бесплатно",
+  "landing.openApp": "Открыть приложение",
   "landing.browseBusinesses": "Смотреть бизнесы",
   "landing.findBusiness": "Найти бизнес на BookMe",
   "landing.aboutBadge": "О BookMe",
@@ -1448,6 +1450,7 @@ const tg: Dict = {
   "landing.heroBody":
     "BookMe барои сартарошхона, салон, беморхона ва студияҳо саҳифаи нӯбатгирӣ, ҷадвали кормандон, ҳифз аз наомадан ва чати зинда бо мизоҷонро медиҳад — ҳама чиз дар дақиқаҳо, на ҳафтаҳо, омода мешавад.",
   "landing.startFree": "Ройгон оғоз кунед",
+  "landing.openApp": "Барномаро кушоед",
   "landing.browseBusinesses": "Дидани бизнесҳо",
   "landing.findBusiness": "Дар BookMe бизнес ёбед",
   "landing.aboutBadge": "Дар бораи BookMe",

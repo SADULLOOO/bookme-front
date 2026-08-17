@@ -5,11 +5,20 @@ import { ArrowRight, HeartHandshake, ShieldCheck, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { DirectoryExplorer } from "@/components/landing/directory-explorer";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { useT } from "@/lib/i18n/use-t";
 import type { PublicOrganizationSummary } from "@/lib/types";
 
 export function LandingContent({ businesses }: { businesses: PublicOrganizationSummary[] }) {
   const t = useT();
+  // The "BookMe" wordmark on every public/auth page links back here, so a
+  // signed-in owner browsing another business (or landing here from
+  // /register, /login, a 404...) ends up on this page constantly. It used
+  // to always show "Sign in" regardless of session state, which reads
+  // exactly like being logged out even though nothing actually happened.
+  const hydrated = useAuthStore((s) => s.hydrated);
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = hydrated && !!user;
 
   return (
     <div className="relative z-[1] mx-auto max-w-[1040px] px-6 pt-8 pb-24 sm:pt-10">
@@ -20,9 +29,15 @@ export function LandingContent({ businesses }: { businesses: PublicOrganizationS
         </Link>
         <div className="flex items-center gap-2.5">
           <LanguageSwitcher />
-          <Button render={<Link href="/login" />} variant="outline" size="sm" className="glass rounded-full border-0 px-4">
-            {t("common.signIn")}
-          </Button>
+          {isAuthenticated ? (
+            <Button render={<Link href="/app/home" />} size="sm" className="rounded-full px-4">
+              {t("landing.openApp")}
+            </Button>
+          ) : (
+            <Button render={<Link href="/login" />} variant="outline" size="sm" className="glass rounded-full border-0 px-4">
+              {t("common.signIn")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -40,11 +55,11 @@ export function LandingContent({ businesses }: { businesses: PublicOrganizationS
 
       <div className="mb-16 flex flex-wrap items-center gap-3">
         <Button
-          render={<Link href="/register" />}
+          render={<Link href={isAuthenticated ? "/app/home" : "/register"} />}
           size="lg"
           className="rounded-full px-6 shadow-[0_10px_26px_-8px_color-mix(in_srgb,var(--brand)_55%,transparent)]"
         >
-          {t("landing.startFree")} <ArrowRight className="size-4" />
+          {isAuthenticated ? t("landing.openApp") : t("landing.startFree")} <ArrowRight className="size-4" />
         </Button>
         <Button render={<Link href="#directory" />} variant="outline" size="lg" className="glass rounded-full border-0 px-6">
           {t("landing.browseBusinesses")}
