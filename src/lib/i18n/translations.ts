@@ -418,6 +418,7 @@ const en: Dict = {
 
   // chat
   "chat.title": "Chats",
+  "chat.backToList": "Back to chats",
   "chat.businessInbox": "Business inbox",
   "chat.myConversations": "My conversations",
   "chat.supportInbox": "Support inbox",
@@ -1037,6 +1038,7 @@ const ru: Dict = {
   "review.failed": "Не удалось отправить отзыв.",
 
   "chat.title": "Чаты",
+  "chat.backToList": "Назад к чатам",
   "chat.businessInbox": "Входящие бизнеса",
   "chat.myConversations": "Мои переписки",
   "chat.supportInbox": "Поддержка",
@@ -1649,6 +1651,7 @@ const tg: Dict = {
   "review.failed": "Шарҳ фиристода нашуд.",
 
   "chat.title": "Чатҳо",
+  "chat.backToList": "Бозгашт ба чатҳо",
   "chat.businessInbox": "Паёмҳои бизнес",
   "chat.myConversations": "Сӯҳбатҳои ман",
   "chat.supportInbox": "Дастгирӣ",

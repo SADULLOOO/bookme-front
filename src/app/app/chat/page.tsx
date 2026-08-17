@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { AlertCircle, LifeBuoy, RefreshCw, Send } from "lucide-react";
+import { AlertCircle, ArrowLeft, LifeBuoy, RefreshCw, Send } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
 import { NewConversationButton } from "@/components/chat/new-conversation-button";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -69,6 +69,15 @@ function ChatPageInner() {
   }
   const currentId = activeId;
 
+  // Mobile is single-pane, so which conversation is *loaded* (activeId,
+  // above) and which pane is *showing* are two different questions — the
+  // desktop-style auto-select above always keeps one pinned, which would
+  // otherwise make the list unreachable the instant a "back" tap set
+  // activeId to null: this same render would just auto-select it right back.
+  // Starts true so mobile opens on the list, matching every other chat app,
+  // rather than dropping straight into whichever conversation is first.
+  const [mobileShowList, setMobileShowList] = useState(true);
+
   // Deep link from a business's public page ("Message business") — creates
   // (or reuses) the conversation with that org, opens it, then strips the
   // param so refreshing doesn't re-trigger it.
@@ -78,6 +87,7 @@ function ChatPageInner() {
       .then((conversation) => {
         refreshList();
         setActiveId(conversation.id);
+        setMobileShowList(false);
       })
       .catch(() => toast.error(t("chat.startFailed")))
       .finally(() => router.replace("/app/chat"));
@@ -260,14 +270,20 @@ function ChatPageInner() {
       const conversation = await apiFetch<ChatConversation>("/chat/support", { method: "POST" });
       refreshList();
       setActiveId(conversation.id);
+      setMobileShowList(false);
     } catch {
       toast.error(t("chat.startFailed"));
     }
   }
 
   return (
-    <div className="flex h-[calc(100dvh-32px)] gap-3.5">
-      <aside className="glass flex w-[280px] shrink-0 flex-col overflow-hidden p-2">
+    <div className="flex h-[calc(100dvh-116px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] gap-3.5 sm:h-[calc(100dvh-32px)]">
+      <aside
+        className={cn(
+          "glass flex w-full shrink-0 flex-col overflow-hidden p-2 sm:w-[280px]",
+          !mobileShowList && "hidden sm:flex",
+        )}
+      >
         <div className="flex items-center justify-between px-2 py-2">
           <h2 className="font-display text-sm font-bold text-ink">{t("chat.title")}</h2>
           {view === "personal" && (
@@ -284,6 +300,7 @@ function ChatPageInner() {
                 onCreated={(id) => {
                   refreshList();
                   setActiveId(id);
+                  setMobileShowList(false);
                 }}
               />
             </div>
@@ -332,7 +349,10 @@ function ChatPageInner() {
             <button
               key={c.id}
               type="button"
-              onClick={() => setActiveId(c.id)}
+              onClick={() => {
+                setActiveId(c.id);
+                setMobileShowList(false);
+              }}
               className={cn(
                 "flex w-full items-center gap-2.5 rounded-[13px] p-2.5 text-left transition-colors",
                 c.id === currentId ? "bg-brand/15" : "hover:bg-glass-fill",
@@ -368,11 +388,24 @@ function ChatPageInner() {
         </div>
       </aside>
 
-      <div className="glass flex flex-1 flex-col overflow-hidden">
+      <div
+        className={cn(
+          "glass flex-1 flex-col overflow-hidden",
+          mobileShowList ? "hidden sm:flex" : "flex",
+        )}
+      >
         {activeConversation ? (
           <>
             <div className="flex items-center justify-between gap-2.5 border-b border-glass-border px-4.5 py-3.5">
               <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setMobileShowList(true)}
+                  aria-label={t("chat.backToList")}
+                  className="-ml-1 flex size-8 shrink-0 items-center justify-center rounded-full text-sub transition-colors hover:bg-glass-fill-strong hover:text-ink sm:hidden"
+                >
+                  <ArrowLeft className="size-4" />
+                </button>
                 <UserAvatar name={peerName(activeConversation)} size={36} />
                 <div className="text-[14px] font-bold text-ink">{peerName(activeConversation)}</div>
               </div>
