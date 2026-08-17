@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -11,12 +12,14 @@ import {
   ListPlus,
   LogOut,
   MapPin,
+  Menu,
   MessageCircle,
   Scissors,
   ShieldCheck,
   Sparkles,
   UserRound,
   Users,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import styles from "./app-shell.module.css";
@@ -78,13 +81,44 @@ export function Rail() {
   // the server render (false) on first paint — no hydration mismatch.
   const isDark = theme === "dark";
 
+  // Off-canvas on mobile — the rail is a fixed 232px sidebar at every
+  // desktop breakpoint, so on a phone it has to slide in over the content
+  // instead of squeezing beside it (that's what was producing the mangled,
+  // overlapping layout).
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   async function handleLogout() {
     await logout();
     router.push("/login");
   }
 
   return (
-    <aside className={cn("glass", styles.rail)}>
+    <>
+      <button
+        type="button"
+        className={cn("glass", styles.menuButton)}
+        onClick={() => setMobileOpen((v) => !v)}
+        aria-label={mobileOpen ? t("nav.closeMenu") : t("nav.openMenu")}
+      >
+        {mobileOpen ? <X /> : <Menu />}
+      </button>
+
+      {mobileOpen && (
+        <div className={styles.backdrop} onClick={() => setMobileOpen(false)} aria-hidden="true" />
+      )}
+
+      <aside className={cn("glass", styles.rail, mobileOpen && styles.railOpen)}>
       <Link href="/app/home" className={styles.brand}>
         <span className={styles.brandDot} />
         BookMe
@@ -171,7 +205,8 @@ export function Rail() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 

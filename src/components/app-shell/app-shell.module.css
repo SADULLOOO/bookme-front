@@ -8,6 +8,15 @@
   padding: 18px 14px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+}
+
+.menuButton {
+  display: none;
+}
+
+.backdrop {
+  display: none;
 }
 
 .brand {
@@ -154,7 +163,7 @@
   z-index: 1;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 860px) and (min-width: 681px) {
   .rail {
     width: 172px;
     padding: 18px 12px;
@@ -164,13 +173,60 @@
     padding: 32px 18px 60px;
   }
 }
-@media (max-width: 520px) {
-  .rail {
-    width: 156px;
-    padding: 16px 10px;
+
+/* Below tablet width, the persistent sidebar has nowhere to put itself
+   without crushing the content next to it (that's the "everything
+   overlapping and wrapped one word per line" mess) — switch to an
+   off-canvas drawer instead: hidden by default, slid in over the content
+   on top of a dim backdrop when the menu button is tapped. */
+@media (max-width: 680px) {
+  .menuButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: calc(14px + env(safe-area-inset-top));
+    left: 14px;
+    z-index: 100;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border-radius: 13px;
+    color: var(--ink);
   }
+  .menuButton svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 85;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+  }
+
+  .rail {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(280px, 82vw);
+    z-index: 90;
+    border-radius: 0;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+    padding-top: calc(20px + env(safe-area-inset-top));
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+  .railOpen {
+    transform: translateX(0);
+  }
+
   .content {
-    margin-left: 190px;
-    padding: 24px 14px 48px;
+    margin-left: 0;
+    max-width: 100%;
+    padding: calc(76px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
   }
 }

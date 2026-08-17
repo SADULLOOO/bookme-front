@@ -21,6 +21,8 @@ const en: Dict = {
 
   // nav / rail
   "nav.home": "Home",
+  "nav.openMenu": "Open menu",
+  "nav.closeMenu": "Close menu",
   "nav.ai": "AI Assistant",
   "ai.title": "AI Assistant",
   "ai.subtitle": "Ask about bookings, businesses, your team, or your account.",
@@ -653,6 +655,8 @@ const ru: Dict = {
   "app.loadingAccount": "Загружаем ваш аккаунт…",
 
   "nav.home": "Главная",
+  "nav.openMenu": "Открыть меню",
+  "nav.closeMenu": "Закрыть меню",
   "nav.ai": "AI-помощник",
   "ai.title": "AI-помощник",
   "ai.subtitle": "Спросите о записях, бизнесах, команде или вашем аккаунте.",
@@ -1263,6 +1267,8 @@ const tg: Dict = {
   "app.loadingAccount": "Ҳисоби шумо бор карда мешавад…",
 
   "nav.home": "Асосӣ",
+  "nav.openMenu": "Кушодани меню",
+  "nav.closeMenu": "Пӯшидани меню",
   "nav.ai": "Ёрдамчии AI",
   "ai.title": "Ёрдамчии AI",
   "ai.subtitle": "Дар бораи нӯбатҳо, бизнесҳо, кормандон ё ҳисоби худ бипурсед.",
